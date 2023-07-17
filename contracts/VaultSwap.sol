@@ -3,12 +3,14 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 import "hardhat/console.sol";
 
 contract VaultSwap is Ownable {
     IERC20 public srcToken;
     IERC20 public targetToken;
+    IUniswapV2Router02 public router2;
 
     uint256 public startTimeStamp;
     uint256 public constant epochDuration = 7 days;
@@ -19,6 +21,7 @@ contract VaultSwap is Ownable {
         uint256 totalDepositAmount;
         uint256 accruedTargetTokenAmount;
         uint256 lastSwapedEpochId;
+        uint256 lastWithdrawEpochId; // to check that user can withdraw only once in an epoch
     }
     // user => position
     mapping(address => Position) public userPositions;
@@ -34,6 +37,7 @@ contract VaultSwap is Ownable {
     mapping(uint256 => EpochInfo) public epochInfos;
 
     constructor(
+        address _router2,
         address _srcToken,
         address _targetToken,
         uint256 _startTimeStamp
@@ -43,6 +47,7 @@ contract VaultSwap is Ownable {
             "Start time must be in the future"
         );
 
+        router2 = IUniswapV2Router02(_router2);
         srcToken = IERC20(_srcToken);
         targetToken = IERC20(_targetToken);
         startTimeStamp = _startTimeStamp;
@@ -62,6 +67,18 @@ contract VaultSwap is Ownable {
         uint256 oldTargetTokenBal = targetToken.balanceOf(address(this));
 
         // implement swap logic
+        address[] memory path;
+        path = new address[](2);
+        path[0] = address(srcToken);
+        path[1] = address(targetToken);
+
+        uint256[] memory amounts = router2.swapExactTokensForTokens(
+            swapAmount,
+            (swapAmount * 997) / 1000,
+            path,
+            address(this),
+            block.timestamp + 100
+        );
 
         ////
         epochInfos[lastSwapedEpochId].swapedTargetTokenAmount =
@@ -93,6 +110,11 @@ contract VaultSwap is Ownable {
         uint256 srcTokenAmount,
         uint256 targetTokenAmount
     ) external {
+        require(
+            userPositions[msg.sender].lastWithdrawEpochId < getCurrentEpochId(),
+            "Already withdrawn in this epoch"
+        );
+
         (
             userPositions[msg.sender].totalDepositAmount,
             userPositions[msg.sender].accruedTargetTokenAmount
@@ -111,6 +133,7 @@ contract VaultSwap is Ownable {
         userPositions[msg.sender].totalDepositAmount -= srcTokenAmount;
         userPositions[msg.sender].accruedTargetTokenAmount -= targetTokenAmount;
         userPositions[msg.sender].lastSwapedEpochId = lastSwapedEpochId;
+        userPositions[msg.sender].lastWithdrawEpochId = getCurrentEpochId();
 
         srcToken.transfer(msg.sender, srcTokenAmount);
         targetToken.transfer(msg.sender, targetTokenAmount);
