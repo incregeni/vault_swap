@@ -10,7 +10,7 @@ import "hardhat/console.sol";
 contract VaultSwap is Ownable {
     IERC20 public srcToken;
     IERC20 public targetToken;
-    IUniswapV2Router02 public router2;
+    IUniswapV2Router02 public router02;
 
     uint256 public startTimeStamp;
     uint256 public constant epochDuration = 7 days;
@@ -37,7 +37,7 @@ contract VaultSwap is Ownable {
     mapping(uint256 => EpochInfo) public epochInfos;
 
     constructor(
-        address _router2,
+        address _router02,
         address _srcToken,
         address _targetToken,
         uint256 _startTimeStamp
@@ -47,7 +47,7 @@ contract VaultSwap is Ownable {
             "Start time must be in the future"
         );
 
-        router2 = IUniswapV2Router02(_router2);
+        router02 = IUniswapV2Router02(_router02);
         srcToken = IERC20(_srcToken);
         targetToken = IERC20(_targetToken);
         startTimeStamp = _startTimeStamp;
@@ -55,6 +55,10 @@ contract VaultSwap is Ownable {
 
     function swap(uint256 swapAmount) external onlyOwner {
         require(lastSwapedEpochId < getCurrentEpochId(), "Already swapped");
+        require(
+            srcToken.balanceOf(address(this)) >= swapAmount,
+            "Insufficent Source Token Amount"
+        );
 
         lastSwapedEpochId = getCurrentEpochId();
         epochInfos[lastSwapedEpochId].epochId = lastSwapedEpochId;
@@ -72,14 +76,14 @@ contract VaultSwap is Ownable {
         path[0] = address(srcToken);
         path[1] = address(targetToken);
 
-        uint256[] memory amounts = router2.swapExactTokensForTokens(
+        srcToken.approve(address(router02), swapAmount);
+        router02.swapExactTokensForTokens(
             swapAmount,
-            (swapAmount * 997) / 1000,
+            (swapAmount * 997 * 997) / 1000 / 1000, // Considering Fee and slippage (0.3%)
             path,
             address(this),
             block.timestamp + 100
         );
-
         ////
         epochInfos[lastSwapedEpochId].swapedTargetTokenAmount =
             targetToken.balanceOf(address(this)) -
@@ -90,8 +94,10 @@ contract VaultSwap is Ownable {
         uint256 srcTokenAmount,
         uint256 targetTokenAmount
     ) external {
-        require(srcTokenAmount > 0, "Amount must be greater than 0");
-        require(targetTokenAmount > 0, "Amount must be greater than 0");
+        require(
+            srcTokenAmount > 0 || targetTokenAmount > 0,
+            "At least one amount must be greater than 0"
+        );
 
         srcToken.transferFrom(msg.sender, address(this), srcTokenAmount);
         targetToken.transferFrom(msg.sender, address(this), targetTokenAmount);

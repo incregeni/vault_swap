@@ -8,6 +8,7 @@ coverage
 coverage.json
 typechain
 typechain-types
+abi
 
 # Hardhat files
 cache
