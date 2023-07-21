@@ -11,10 +11,10 @@ const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   networks: {
     hardhat: {
-      // forking: {
-      //   url: "https://goerli.infura.io/v3/afee43fb439a4e1794d9acad3e4a95b8",
-      // }
-      blockGasLimit: 3000000000,
+      forking: {
+        url: "https://sepolia.infura.io/v3/afee43fb439a4e1794d9acad3e4a95b8",
+        blockNumber: 3909195,
+      },
     },
     bnb: {
       url: "https://bsc-mainnet.public.blastapi.io/",
@@ -86,6 +86,13 @@ const config: HardhatUserConfig = {
     currency: "USD",
     gasPrice: 500 * Math.pow(10, 9),
   },
+  abiExporter: {
+    runOnCompile: true,
+    path: "./abi",
+    clear: true,
+    flat: true,
+  },
+
   plugins: ["@nomiclabs/hardhat-ethers", "hardhat-gas-reporter"],
   etherscan: {
     apiKey: "XEAWRP777XXMIXWWNN5TC8ZJJDN6XEZ76Q",
