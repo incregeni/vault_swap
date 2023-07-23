@@ -44,3 +44,20 @@ This exercise is designed to be basic to be completed in a short amount of time.
 - Set a reasonable amount of slippage so that most swaps pass without throwing errors.
 - You do not need to worry about the scheduled jobs. We are comfortable as long as a special role can execute swaps.
 - You do not have to handle swap instructions for the other direction. This vault can only swap $USTT to $BACON.
+
+PS D:\Blockchain_Projects\Mine\vault_swap> npx hardhat run .\scripts\deployVaultSwap.ts --network sepolia
+Signer's Address : 0xcF41efD2Efc47F8bc58acfA281854eea13B4fC96
+Signer's Balance : BigNumber { value: "1983357977303276004" }
+owner address: 0xcF41efD2Efc47F8bc58acfA281854eea13B4fC96
+Bob address: 0x02C3d66D7C959FC45025ec85c5075cBfEF31b584
+Charlie address: 0xd64f1184447fb9264a847A31bDBB5276bD4Ee498
+0x7E0987E5b3a30e3f2828572Bb659A548460a3003
+123
+USTT deployed to : 0xD630341327c3676161bdF914441bC466d9BBeB07
+BACON deployed to : 0x53de4427f33f172862c79B7E478fa43224A306bb
+VaultSwap deployed to : 0x9Bd8B557CEbe2dc5b93F13CAF00F93E3aA673a26
+22
+22_1
+33
+44
+PS D:\Blockchain_Projects\Mine\vault_swap>

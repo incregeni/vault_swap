@@ -43,9 +43,6 @@ describe("VaultSwap", function () {
       hre.ethers.provider
     );
 
-    console.log(await UniswapV2Router02.factory());
-    console.log("123");
-
     const U = await hre.ethers.getContractFactory("Mock_erc20");
     USTT = await U.deploy("$USTT", "USTT", hre.ethers.utils.parseEther("100000000000000000"));
     await USTT.deployed();
@@ -63,7 +60,6 @@ describe("VaultSwap", function () {
     );
     await VaultSwap.deployed();
 
-    console.log("22");
     await USTT.connect(owner).approve(
       UniswapV2Router02.address,
       hre.ethers.utils.parseEther("9000000000000000")
@@ -73,7 +69,6 @@ describe("VaultSwap", function () {
       hre.ethers.utils.parseEther("90000000000000000")
     );
 
-    console.log("22_1");
     await UniswapV2Router02.connect(owner).addLiquidity(
       USTT.address,
       BACON.address,
@@ -84,13 +79,11 @@ describe("VaultSwap", function () {
       owner.address,
       (await getCurrentTimeStamp()) + 100
     );
-    console.log("33");
 
     await USTT.transfer(Alice.address, hre.ethers.utils.parseEther("2000"));
     await USTT.transfer(Bob.address, hre.ethers.utils.parseEther("3000"));
     await USTT.transfer(Charlie.address, hre.ethers.utils.parseEther("5000"));
 
-    console.log("44");
     await timeTravel(1);
   });
   it("epoch1", async function () {
@@ -115,10 +108,6 @@ describe("VaultSwap", function () {
 
     await VaultSwap.swap(hre.ethers.utils.parseEther("1200"));
 
-    console.log(await VaultSwap.getUserSrcAndTargetTokenBalance(Alice.address));
-    console.log(await VaultSwap.getUserSrcAndTargetTokenBalance(Bob.address));
-    console.log(await VaultSwap.getUserSrcAndTargetTokenBalance(Charlie.address));
-
     expect((await VaultSwap.getUserSrcAndTargetTokenBalance(Alice.address)).userSrcTokenAmount).eq(
       hre.ethers.utils.parseEther("1200")
     );
@@ -134,16 +123,26 @@ describe("VaultSwap", function () {
   });
   it("epoch3", async function () {
     await timeTravel(7);
-    console.log(
+    console.log(await VaultSwap.getUserSrcAndTargetTokenBalance(Bob.address));
+    expect(
       (await VaultSwap.getUserSrcAndTargetTokenBalance(Bob.address)).userTargetTokenAmount
+    ).to.be.within(
+      hre.ethers.utils.parseEther("12000").mul(997).mul(997).div(1000).div(1000), // Considering Fee and slippage (0.3%)
+      hre.ethers.utils.parseEther("12000").mul(997).div(1000)
+    );
+
+    await VaultSwap.connect(Bob).withdraw(
+      hre.ethers.utils.parseEther("300"),
+      hre.ethers.utils.parseEther("2000")
+    );
+    expect((await VaultSwap.getUserSrcAndTargetTokenBalance(Bob.address)).userSrcTokenAmount).eq(
+      hre.ethers.utils.parseEther("1500")
     );
     expect(
       (await VaultSwap.getUserSrcAndTargetTokenBalance(Bob.address)).userTargetTokenAmount
     ).to.be.within(
-      hre.ethers.utils.parseEther("1200").mul(997).mul(997).div(1000).div(1000), // Considering Fee and slippage (0.3%)
-      hre.ethers.utils.parseEther("1200")
+      hre.ethers.utils.parseEther("10000").mul(997).mul(997).div(1000).div(1000), // Considering Fee and slippage (0.3%)
+      hre.ethers.utils.parseEther("10000")
     );
-
-    await VaultSwap.swap(hre.ethers.utils.parseEther("2000"));
   });
 });

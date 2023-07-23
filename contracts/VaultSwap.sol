@@ -13,7 +13,9 @@ contract VaultSwap is Ownable {
     IUniswapV2Router02 public router02;
 
     uint256 public startTimeStamp;
-    uint256 public constant epochDuration = 7 days;
+    // uint256 public constant epochDuration = 7 days;
+    uint256 public constant epochDuration = 2 minutes; //  for Test
+
     uint256 public lastSwapedEpochId;
 
     // user's position

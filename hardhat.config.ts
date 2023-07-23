@@ -13,7 +13,6 @@ const config: HardhatUserConfig = {
     hardhat: {
       forking: {
         url: "https://sepolia.infura.io/v3/afee43fb439a4e1794d9acad3e4a95b8",
-        blockNumber: 3909195,
       },
     },
     bnb: {
